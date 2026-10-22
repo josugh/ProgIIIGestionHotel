@@ -24,7 +24,7 @@ public class Cliente {
         this.telefono = telefono;
         this.email = email;
         this.direccion = direccion;
-        this.clienteFrecuente = false;
+        this.clienteFrecuente=false;
     }
 
 
