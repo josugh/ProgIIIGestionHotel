@@ -23,7 +23,7 @@ public class Cliente {
         this.dni = dni;
         this.telefono = telefono;
         this.email = email;
-        this.direccion = direccion;
+        this.direccion =direccion;
         this.clienteFrecuente=false;
     }
 
