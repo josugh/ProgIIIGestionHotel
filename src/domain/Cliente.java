@@ -1,6 +1,5 @@
 package domain;
 
-
 public class Cliente {
 
     private int idCliente;
