@@ -1,6 +1,6 @@
 package gui;
 
-public enum Empleado {
+public enum TipoEmpleado {
 	RECEPCION, ADMINISTRACION, GERENCIA
 
 }
