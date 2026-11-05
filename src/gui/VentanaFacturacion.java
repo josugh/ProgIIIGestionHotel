@@ -21,7 +21,11 @@ public class VentanaFacturacion extends JFrame {
     private DefaultTableModel modeloExtras;
     private DefaultTableModel modeloResumen;
 
-    // Constructor de la ventana
+    // Componentes para el hilo
+    private JProgressBar barraProgreso;
+    private JButton btnCalcular;
+
+    // Constructor
     public VentanaFacturacion() {
         setTitle("Gestion Hotel - Facturacion");
         setSize(750, 550);
@@ -33,7 +37,7 @@ public class VentanaFacturacion extends JFrame {
         calcularFactura();
     }
 
-    // Creamos la ventana con tres tablas
+    // Creamos la ventana con las tres tablas
     private void crearVentana() {
 
         JPanel panelPrincipal = new JPanel(new BorderLayout(10, 10));
@@ -45,7 +49,7 @@ public class VentanaFacturacion extends JFrame {
 
         JPanel panelTablas = new JPanel(new GridLayout(3, 1, 10, 10));
 
-        // TABLA 1: Datos de las reservas
+        // TABLA 1: Datos de la reserva
         String[] columnasReservas = {
                 "Reserva", "Cliente", "Habitacion",
                 "Noches", "Precio/noche"
@@ -103,7 +107,7 @@ public class VentanaFacturacion extends JFrame {
 
             @Override
             public boolean isCellEditable(int fila, int columna) {
-                // Solo dejamos cambiar el descuento
+                // Solo se puede modificar el descuento
                 return fila == 2 && columna == 1;
             }
         };
@@ -122,7 +126,7 @@ public class VentanaFacturacion extends JFrame {
         // BOTONES
         JPanel panelBotones = new JPanel(new FlowLayout(FlowLayout.RIGHT));
 
-        JButton btnCalcular = new JButton("Calcular factura");
+        btnCalcular = new JButton("Calcular factura");
         JButton btnGuardar = new JButton("Guardar factura");
         JButton btnExportar = new JButton("Exportar TXT");
 
@@ -134,16 +138,26 @@ public class VentanaFacturacion extends JFrame {
         panelBotones.add(btnGuardar);
         panelBotones.add(btnExportar);
 
-        panelPrincipal.add(panelBotones, BorderLayout.SOUTH);
+        // BARRA DE PROGRESO
+        barraProgreso = new JProgressBar(0, 100);
+        barraProgreso.setStringPainted(true);
+        barraProgreso.setVisible(false);
+
+        // Panel inferior para la barra y los botones
+        JPanel panelInferior = new JPanel(new BorderLayout(5, 5));
+
+        panelInferior.add(barraProgreso, BorderLayout.NORTH);
+        panelInferior.add(panelBotones, BorderLayout.SOUTH);
+
+        panelPrincipal.add(panelInferior, BorderLayout.SOUTH);
 
         // Evento del boton calcular
         btnCalcular.addActionListener(e -> calcularFactura());
     }
 
-    // Introducimos datos inventados para probar
+    // Cargamos datos de prueba
     private void cargarDatosPrueba() {
 
-    	
         modeloReservas.addRow(new Object[]{
                 "1001", "Juan Garcia", "203", 3, 90.0
         });
@@ -167,10 +181,12 @@ public class VentanaFacturacion extends JFrame {
 
         // Guardamos el descuento si lo estamos editando
         if (tablaResumen.isEditing()) {
-            tablaResumen.getCellEditor().stopCellEditing();
+            if (!tablaResumen.getCellEditor().stopCellEditing()) {
+                return;
+            }
         }
 
-        // Obtenemos las noches y el precio de la tabla de reservas
+        // Obtenemos las noches y el precio
         int noches = ((Number)
                 modeloReservas.getValueAt(0, 3)).intValue();
 
@@ -201,12 +217,16 @@ public class VentanaFacturacion extends JFrame {
             descuento = Double.parseDouble(textoDescuento);
 
         } catch (NumberFormatException e) {
+
             JOptionPane.showMessageDialog(this,
                     "El descuento debe ser un numero.");
             return;
         }
 
-        if (descuento < 0 || descuento > 100) {
+        // Comprobamos que el descuento sea correcto
+        if (!Double.isFinite(descuento)
+                || descuento < 0 || descuento > 100) {
+
             JOptionPane.showMessageDialog(this,
                     "El descuento debe estar entre 0 y 100.");
             return;
@@ -218,14 +238,86 @@ public class VentanaFacturacion extends JFrame {
         double total = subtotalFactura -
                 (subtotalFactura * descuento / 100);
 
-        // Mostramos los resultados en la tabla resumen
-        modeloResumen.setValueAt(formatoEuros(importeHabitacion), 0, 1);
-        modeloResumen.setValueAt(formatoEuros(importeExtras), 1, 1);
-        modeloResumen.setValueAt(formatoEuros(total), 3, 1);
+        // Mostramos la habitacion y los extras
+        modeloResumen.setValueAt(
+                formatoEuros(importeHabitacion), 0, 1);
+
+        modeloResumen.setValueAt(
+                formatoEuros(importeExtras), 1, 1);
+
+        // Solo usamos el hilo si hay descuento
+        if (descuento > 0) {
+
+            modeloResumen.setValueAt("Calculando...", 3, 1);
+            calcularConHilo(total);
+
+        } else {
+
+            barraProgreso.setVisible(false);
+            modeloResumen.setValueAt(formatoEuros(total), 3, 1);
+        }
     }
 
+    // Hilo para simular el calculo del descuento
+    private void calcularConHilo(double total) {
 
+        // Preparamos la barra
+        barraProgreso.setValue(0);
+        barraProgreso.setString("Calculando descuento...");
+        barraProgreso.setVisible(true);
+
+        // Desactivamos el boton mientras trabaja el hilo
+        btnCalcular.setEnabled(false);
+
+        Thread hilo = new Thread(() -> {
+
+            try {
+
+                // Vamos aumentando la barra de 20 en 20
+                for (int i = 20; i <= 100; i += 20) {
+
+                    Thread.sleep(400);
+
+                    int progreso = i;
+
+                    SwingUtilities.invokeLater(() -> {
+                        barraProgreso.setValue(progreso);
+                    });
+                }
+
+            } catch (InterruptedException e) {
+
+                Thread.currentThread().interrupt();
+
+                SwingUtilities.invokeLater(() -> {
+                    barraProgreso.setString("Calculo interrumpido");
+                    modeloResumen.setValueAt("No calculado", 3, 1);
+                    btnCalcular.setEnabled(true);
+                });
+
+                return;
+            }
+
+            // termina el hilo y se muestra el resultado
+            SwingUtilities.invokeLater(() -> {
+
+                modeloResumen.setValueAt(
+                        formatoEuros(total), 3, 1);
+
+                barraProgreso.setValue(100);
+                barraProgreso.setString("Descuento aplicado");
+
+                btnCalcular.setEnabled(true);
+            });
+
+        });
+
+        hilo.start();
+    }
+    
+    
     private String formatoEuros(double cantidad) {
+
         return String.format(
                 Locale.forLanguageTag("es-ES"), "%.2f €", cantidad);
     }
@@ -238,7 +330,6 @@ public class VentanaFacturacion extends JFrame {
             VentanaFacturacion ventana = new VentanaFacturacion();
 
             ventana.setVisible(true);
-
         });
     }
 }
