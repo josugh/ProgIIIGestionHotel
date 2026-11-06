@@ -67,7 +67,7 @@ public class DialogoHabitacion extends JDialog {
 			txtNumero.setText(String.valueOf(habitacion.getNumero()));
 			txtPlanta.setText(String.valueOf(habitacion.getPlanta()));
 			cbTipo.setSelectedItem(habitacion.getTipo());
-			txtPrecio.setText(String.valueOf(habitacion.getPrecio()));
+			txtPrecio.setText(String.valueOf(habitacion.getPrecioNoche()));
 			cbEstado.setSelectedItem(habitacion.getEstado());
 		}
 
@@ -86,9 +86,15 @@ public class DialogoHabitacion extends JDialog {
 		try {
 			numero = Integer.parseInt(txtNumero.getText().trim());
 			planta = Integer.parseInt(txtPlanta.getText().trim());
-			precio = Double.parseDouble(txtPrecio.getText().trim());
+			precio = Double.parseDouble(txtPrecio.getText().trim().replace(",", "."));
 		} catch (NumberFormatException ex) {
 			JOptionPane.showMessageDialog(this, "El número, la planta y el precio deben ser números.", "Error",
+					JOptionPane.ERROR_MESSAGE);
+			return;
+		}
+
+		if (numero <= 0 || planta < 0 || precio <= 0) {
+			JOptionPane.showMessageDialog(this, "El número y el precio deben ser mayores que 0 y la planta no puede ser negativa.", "Error",
 					JOptionPane.ERROR_MESSAGE);
 			return;
 		}
@@ -110,7 +116,7 @@ public class DialogoHabitacion extends JDialog {
 			habitacion.setNumero(numero);
 			habitacion.setPlanta(planta);
 			habitacion.setTipo(tipo);
-			habitacion.setPrecio(precio);
+			habitacion.setPrecioNoche(precio);
 			habitacion.setEstado(estado);
 		}
 		guardado = true;
