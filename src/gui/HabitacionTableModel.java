@@ -57,7 +57,7 @@ public class HabitacionTableModel extends AbstractTableModel {
 		case 2:
 			return h.getTipo();
 		case 3:
-			return h.getPrecio() + " €";
+			return h.getPrecioNoche() + " €";
 		default:
 			return h.getEstado();
 		}

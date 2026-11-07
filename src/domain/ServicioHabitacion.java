@@ -3,46 +3,56 @@ package domain;
 
 public class ServicioHabitacion {
 
-    // Atributos del servicio
-    private int idServicio;
-    private String nombre;
-    private double precio;
+	private Habitacion habitacion;
+	private String nombre;
+	private double precio;
+	private int cantidad;
 
-    // Constructor
-    public ServicioHabitacion(int idServicio, String nombre, double precio) {
-        this.idServicio = idServicio;
-        this.nombre = nombre;
-        this.precio = precio;
-    }
+	public ServicioHabitacion(Habitacion habitacion, String nombre, double precio, int cantidad) {
+		this.habitacion = habitacion;
+		this.nombre = nombre;
+		this.precio = precio;
+		this.cantidad = cantidad;
+	}
 
-    // Getters y setters
-    public int getIdServicio() {
-        return idServicio;
-    }
+	public Habitacion getHabitacion() {
+		return habitacion;
+	}
 
-    public void setIdServicio(int idServicio) {
-        this.idServicio = idServicio;
-    }
+	public void setHabitacion(Habitacion habitacion) {
+		this.habitacion = habitacion;
+	}
 
-    public String getNombre() {
-        return nombre;
-    }
+	public String getNombre() {
+		return nombre;
+	}
 
-    public void setNombre(String nombre) {
-        this.nombre = nombre;
-    }
+	public void setNombre(String nombre) {
+		this.nombre = nombre;
+	}
 
-    public double getPrecio() {
-        return precio;
-    }
+	public double getPrecio() {
+		return precio;
+	}
 
-    public void setPrecio(double precio) {
-        this.precio = precio;
-    }
+	public void setPrecio(double precio) {
+		this.precio = precio;
+	}
 
-    // Mostramos la informacion del servicio
-    @Override
-    public String toString() {
-        return nombre + " - " + precio + " euros";
-    }
+	public int getCantidad() {
+		return cantidad;
+	}
+
+	public void setCantidad(int cantidad) {
+		this.cantidad = cantidad;
+	}
+
+	public double getImporte() {
+		return precio * cantidad;
+	}
+
+	@Override
+	public String toString() {
+		return cantidad + " x " + nombre + " = " + getImporte() + " €";
+	}
 }
