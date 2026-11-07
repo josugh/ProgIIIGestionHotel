@@ -5,15 +5,30 @@ public class Habitacion {
 	private int numero;
 	private int planta;
 	private TipoHabitacion tipo;
-	private double precio;
+	private double precioNoche;
 	private EstadoHabitacion estado;
 
-	public Habitacion(int numero, int planta, TipoHabitacion tipo, double precio, EstadoHabitacion estado) {
+	public Habitacion(int numero, int planta, TipoHabitacion tipo, double precioNoche, EstadoHabitacion estado) {
 		this.numero = numero;
 		this.planta = planta;
 		this.tipo = tipo;
-		this.precio = precio;
+		this.precioNoche = precioNoche;
 		this.estado = estado;
+	}
+
+	public boolean estaDisponible() {
+		return estado == EstadoHabitacion.DISPONIBLE;
+	}
+
+	public void cambiarEstado(EstadoHabitacion nuevoEstado) {
+		this.estado = nuevoEstado;
+	}
+
+	public void actualizarPrecio(double nuevoPrecio) {
+		if (nuevoPrecio <= 0) {
+			throw new IllegalArgumentException("El precio tiene que ser mayor que 0");
+		}
+		this.precioNoche = nuevoPrecio;
 	}
 
 	public int getNumero() {
@@ -40,12 +55,12 @@ public class Habitacion {
 		this.tipo = tipo;
 	}
 
-	public double getPrecio() {
-		return precio;
+	public double getPrecioNoche() {
+		return precioNoche;
 	}
 
-	public void setPrecio(double precio) {
-		this.precio = precio;
+	public void setPrecioNoche(double precioNoche) {
+		this.precioNoche = precioNoche;
 	}
 
 	public EstadoHabitacion getEstado() {

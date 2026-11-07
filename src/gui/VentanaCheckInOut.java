@@ -1,4 +1,3 @@
-
 package gui;
 
 import java.awt.BorderLayout;
@@ -8,9 +7,16 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
+import java.util.List;
 
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
+
+import domain.EstadoHabitacion;
+import domain.EstadoReserva;
+import domain.Habitacion;
+import domain.Hotel;
+import domain.Reserva;
 
 public class VentanaCheckInOut extends JFrame {
 
@@ -21,25 +27,58 @@ public class VentanaCheckInOut extends JFrame {
 
 	private JTabbedPane pestanas; // con esto conseguimos qu ese hagan pestañas en vez de hacer diferentes ventanas 
 
-    private JComboBox<String> cbReservaEntrada;
+    private List<Reserva> reservas;
+
+    private JComboBox<Reserva> cbReservaEntrada;
     private JTextField txtClienteEntrada;
     private JTextField txtHabitacionEntrada;
     private JTextField txtFechaEntrada;
     private JSpinner spHuespedes;
 
-    private JComboBox<String> cbReservaSalida;
+    private JComboBox<Reserva> cbReservaSalida;
     private JTextField txtClienteSalida;
     private JTextField txtHabitacionSalida;
     private JTextField txtFechaSalida;
 
     // Constructor de la ventana
     public VentanaCheckInOut() {
+        this(new Hotel().getReservas());
+    }
+
+    public VentanaCheckInOut(List<Reserva> reservas) {
+        this.reservas = reservas;
         setTitle("Gestion Hotel - Check-in / Check-out");
-        setSize(480, 330);
+        setSize(640, 330);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 
         crearVentana();
+        cargarReservas();
+    }
+
+    private void cargarReservas() {
+        cbReservaEntrada.removeAllItems();
+        cbReservaSalida.removeAllItems();
+        for (Reserva r : reservas) {
+            if (r.getEstadoReserva() == EstadoReserva.CONFIRMADA) {
+                cbReservaEntrada.addItem(r);
+            } else if (r.getEstadoReserva() == EstadoReserva.EN_CURSO) {
+                cbReservaSalida.addItem(r);
+            }
+        }
+        limpiarCampos();
+        mostrarDatos(true);
+        mostrarDatos(false);
+    }
+
+    private void limpiarCampos() {
+        txtClienteEntrada.setText("");
+        txtHabitacionEntrada.setText("");
+        txtFechaEntrada.setText("");
+        spHuespedes.setValue(1);
+        txtClienteSalida.setText("");
+        txtHabitacionSalida.setText("");
+        txtFechaSalida.setText("");
     }
 
     // Creamos las dos pestanas
@@ -139,6 +178,7 @@ public class VentanaCheckInOut extends JFrame {
 
         // Eventos de los botones
         btnBuscar.addActionListener(e -> buscarReserva(true));
+        cbReservaEntrada.addActionListener(e -> mostrarDatos(true));
         btnFecha.addActionListener(e -> seleccionarFecha(txtFechaEntrada));
         btnConfirmar.addActionListener(e -> confirmarCheckIn());
 
@@ -216,6 +256,7 @@ public class VentanaCheckInOut extends JFrame {
         panel.add(panelBoton, BorderLayout.SOUTH);
 
         btnBuscar.addActionListener(e -> buscarReserva(false));
+        cbReservaSalida.addActionListener(e -> mostrarDatos(false));
         btnFecha.addActionListener(e -> seleccionarFecha(txtFechaSalida));
         btnConfirmar.addActionListener(e -> confirmarCheckOut());
 
@@ -224,8 +265,32 @@ public class VentanaCheckInOut extends JFrame {
 
     // Busca la reserva seleccionada
     private void buscarReserva(boolean entrada) {
-        JOptionPane.showMessageDialog(this,
-                "La busqueda de reservas se conectara mas adelante.");
+        Reserva r = (Reserva) (entrada ? cbReservaEntrada : cbReservaSalida).getSelectedItem();
+        if (r == null) {
+            JOptionPane.showMessageDialog(this,
+                    "No hay reservas pendientes de " + (entrada ? "check-in." : "check-out."));
+            return;
+        }
+        mostrarDatos(entrada);
+    }
+
+    private void mostrarDatos(boolean entrada) {
+        Reserva r = (Reserva) (entrada ? cbReservaEntrada : cbReservaSalida).getSelectedItem();
+        if (r == null) {
+            return;
+        }
+        String cliente = r.getCliente().mostrarInformacion();
+        String habitacion = r.getHabitacion().toString();
+        if (entrada) {
+            txtClienteEntrada.setText(cliente);
+            txtHabitacionEntrada.setText(habitacion);
+            txtFechaEntrada.setText(r.getFechaEntrada().toString());
+            spHuespedes.setValue(r.getNumeroHuespedes());
+        } else {
+            txtClienteSalida.setText(cliente);
+            txtHabitacionSalida.setText(habitacion);
+            txtFechaSalida.setText(r.getFechaSalida().toString());
+        }
     }
 
     // Coloca la fecha actual en el campo
@@ -245,8 +310,21 @@ public class VentanaCheckInOut extends JFrame {
             return;
         }
 
+        Reserva r = (Reserva) cbReservaEntrada.getSelectedItem();
+        Habitacion h = r.getHabitacion();
+        if (h.getEstado() != EstadoHabitacion.DISPONIBLE && h.getEstado() != EstadoHabitacion.RESERVADA) {
+            JOptionPane.showMessageDialog(this,
+                    "La habitacion " + h.getNumero() + " esta " + h.getEstado() + ".",
+                    "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        r.setNumeroHuespedes((Integer) spHuespedes.getValue());
+        r.setEstadoReserva(EstadoReserva.EN_CURSO);
+        h.cambiarEstado(EstadoHabitacion.OCUPADA);
         JOptionPane.showMessageDialog(this,
-                "Datos del check-in preparados.");
+                "Check-in realizado: " + r.getCliente().mostrarInformacion()
+                + " en la habitacion " + h.getNumero() + ".");
+        cargarReservas();
     }
 
     // Comprueba los datos del check-out
@@ -261,8 +339,16 @@ public class VentanaCheckInOut extends JFrame {
             return;
         }
 
+        Reserva r = (Reserva) cbReservaSalida.getSelectedItem();
+        Habitacion h = r.getHabitacion();
+        r.setEstadoReserva(EstadoReserva.FINALIZADA);
+        h.cambiarEstado(EstadoHabitacion.LIMPIEZA);
+        PanelHabitaciones.iniciarLimpieza(h);
         JOptionPane.showMessageDialog(this,
-                "Datos del check-out preparados.");
+                "Check-out realizado: " + r.getCliente().mostrarInformacion()
+                + "\nNoches: " + r.calcularNoches()
+                + "\nLa habitacion " + h.getNumero() + " estara disponible cuando termine la limpieza.");
+        cargarReservas();
     }
 
     // Comprueba que la fecha sea correcta

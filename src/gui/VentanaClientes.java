@@ -1,4 +1,3 @@
-
 package gui;
 
 import java.awt.BorderLayout;
@@ -9,6 +8,7 @@ import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.Pattern;
 
 import javax.swing.JButton;
@@ -33,7 +33,7 @@ public class VentanaClientes extends JFrame {
     private static final long serialVersionUID = 1L;
 
     // ATRIBUTOS
-    private ArrayList<Cliente> clientes;
+    private List<Cliente> clientes;
 
     private JTable tablaClientes;
     private DefaultTableModel modeloTabla;
@@ -51,8 +51,16 @@ public class VentanaClientes extends JFrame {
 
     // CONSTRUCTOR
     public VentanaClientes() {
+        this(new ArrayList<>());
+    }
 
-        clientes = new ArrayList<>();
+    public VentanaClientes(List<Cliente> clientes) {
+
+        this.clientes = clientes;
+
+        for (Cliente c : clientes) {
+            siguienteId = Math.max(siguienteId, c.getIdCliente() + 1);
+        }
 
         setTitle("Gestión de Clientes");
         setSize(950, 550);

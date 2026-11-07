@@ -1,4 +1,3 @@
-
 package domain;
 
 import java.time.LocalDate;
@@ -12,7 +11,7 @@ public class Reserva {
     private LocalDate fechaEntrada;
     private LocalDate fechaSalida;
     private int numeroHuespedes;
-    private String estadoReserva;
+    private EstadoReserva estadoReserva;
 
 
     public Reserva(int idReserva, Cliente cliente,
@@ -44,7 +43,7 @@ public class Reserva {
         this.fechaEntrada = fechaEntrada;
         this.fechaSalida = fechaSalida;
         this.numeroHuespedes = numeroHuespedes;
-        this.estadoReserva = "Confirmada";
+        this.estadoReserva = EstadoReserva.CONFIRMADA;
     }
 
 
@@ -73,13 +72,13 @@ public class Reserva {
     // Cancelar reserva
     public void cancelarReserva() {
 
-        estadoReserva = "Cancelada";
+        estadoReserva = EstadoReserva.CANCELADA;
     }
 
     // Comprobar si está cancelada
     public boolean estaCancelada() {
 
-        return estadoReserva.equals("Cancelada");
+        return estadoReserva == EstadoReserva.CANCELADA;
     }
 
     // Modificar fechas
@@ -186,12 +185,12 @@ public class Reserva {
         this.numeroHuespedes = numeroHuespedes;
     }
 
-    public String getEstadoReserva() {
+    public EstadoReserva getEstadoReserva() {
         return estadoReserva;
     }
 
-    public void setEstadoReserva(String estadoReserva) {
-        if (estadoReserva == null || estadoReserva.trim().isEmpty()) {
+    public void setEstadoReserva(EstadoReserva estadoReserva) {
+        if (estadoReserva == null) {
             throw new IllegalArgumentException(
                 "El estado de la reserva no puede estar vacío.");
         }
