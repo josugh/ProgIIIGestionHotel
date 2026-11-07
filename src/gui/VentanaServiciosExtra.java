@@ -1,4 +1,5 @@
 
+
 package gui;
 
 import java.awt.BorderLayout;
@@ -281,6 +282,7 @@ public class VentanaServiciosExtra extends JFrame {
             VentanaServiciosExtra ventana = new VentanaServiciosExtra();
 
             ventana.setVisible(true);
+            
         });
     }
 }
