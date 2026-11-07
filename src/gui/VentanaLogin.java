@@ -13,6 +13,8 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JTextField;
+import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
 
 import domain.Empleado;
 import domain.Hotel;
@@ -25,6 +27,7 @@ public class VentanaLogin extends JFrame {
 	private JTextField textoUsuario;
 	private JPasswordField textoPassword;
 	private JButton botonIniciarSesion;
+	private JLabel labelEstado = new JLabel(" ", SwingConstants.CENTER);
 	private Hotel hotel;
 
 	public VentanaLogin(Hotel hotel) {
@@ -81,6 +84,11 @@ public class VentanaLogin extends JFrame {
 		panelBoton.add(botonIniciarSesion);
 		panelLogIn.add(panelBoton);
 
+		//PANEL LOGIN -> MENSAJE DE ESTADO ("Comprobando...")
+		labelEstado.setFont(FUENTE_TEXTO);
+		labelEstado.setAlignmentX(CENTER_ALIGNMENT);
+		panelLogIn.add(labelEstado);
+
 		add(panelLogIn);
 
 		botonIniciarSesion.addActionListener(e -> iniciarSesion());
@@ -97,14 +105,40 @@ public class VentanaLogin extends JFrame {
 			JOptionPane.showMessageDialog(this, "Introduce el usuario y la contraseña.", "Error", JOptionPane.ERROR_MESSAGE);
 			return;
 		}
-		Empleado empleado = hotel.iniciarSesion(usuario, password);
-		if (empleado == null) {
-			JOptionPane.showMessageDialog(this, "Usuario o contraseña incorrectos.", "Error", JOptionPane.ERROR_MESSAGE);
-			textoPassword.setText("");
-			return;
-		}
-		new VentanaPrincipal(hotel, empleado);
-		dispose();
+
+		activarFormulario(false);
+		labelEstado.setText("Comprobando credenciales...");
+
+		//la comprobación  fuera del hilo de Swing para que la ventana no se congele
+		Thread hiloLogin = new Thread(() -> {
+			try {
+				Thread.sleep(1000); // simula el tiempo de consultar la BD
+			} catch (InterruptedException e) {
+				return;
+			}
+			Empleado empleado = hotel.iniciarSesion(usuario, password);
+
+			SwingUtilities.invokeLater(() -> {
+				if (empleado == null) {
+					labelEstado.setText(" ");
+					activarFormulario(true);
+					JOptionPane.showMessageDialog(this, "Usuario o contraseña incorrectos.", "Error", JOptionPane.ERROR_MESSAGE);
+					textoPassword.setText("");
+					textoPassword.requestFocus();
+				} else {
+					new VentanaPrincipal(hotel, empleado);
+					dispose();
+				}
+			});
+		});
+		hiloLogin.setDaemon(true);   //IA
+		hiloLogin.start();
+	}
+
+	private void activarFormulario(boolean activo) {
+		textoUsuario.setEnabled(activo);
+		textoPassword.setEnabled(activo);
+		botonIniciarSesion.setEnabled(activo);
 	}
 
 }
