@@ -19,6 +19,7 @@ import javax.swing.SwingUtilities;
 import domain.Empleado;
 import domain.EstadoHabitacion;
 import domain.Hotel;
+import domain.TipoEmpleado;
 
 public class VentanaPrincipal extends JFrame {
 
@@ -54,19 +55,21 @@ public class VentanaPrincipal extends JFrame {
 		panelArriba.add(lblBienvenida, BorderLayout.NORTH);
 		panelArriba.add(panelResumen, BorderLayout.CENTER);
 
-		JPanel panelBotones = new JPanel(new GridLayout(2, 3, 10, 10));
+		JPanel panelBotones = new JPanel(new GridLayout(0, 3, 10, 10)); // 0 filas = las que hagan falta
 		panelBotones.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
 		JButton btnHabitaciones = new JButton("Habitaciones");
 		JButton btnClientes = new JButton("Clientes");
 		JButton btnReservas = new JButton("Reservas");
 		JButton btnCheckInOut = new JButton("Check-in / Check-out");
 		JButton btnFacturacion = new JButton("Facturación");
+		JButton btnEmpleados = new JButton("Empleados");
 		JButton btnCerrarSesion = new JButton("Cerrar sesión");
 		panelBotones.add(btnHabitaciones);
 		panelBotones.add(btnClientes);
 		panelBotones.add(btnReservas);
 		panelBotones.add(btnCheckInOut);
 		panelBotones.add(btnFacturacion);
+		panelBotones.add(btnEmpleados);
 		panelBotones.add(btnCerrarSesion);
 
 		add(panelArriba, BorderLayout.NORTH);
@@ -77,7 +80,11 @@ public class VentanaPrincipal extends JFrame {
 		btnReservas.addActionListener(e -> new VentanaReservas(hotel.getClientes(), hotel.getHabitaciones(), hotel.getReservas()).setVisible(true));
 		btnCheckInOut.addActionListener(e -> new VentanaCheckInOut(hotel.getReservas()).setVisible(true));
 		btnFacturacion.addActionListener(e -> new VentanaFacturacion().setVisible(true));
+		btnEmpleados.addActionListener(e -> new VentanaEmpleados(hotel.getEmpleados(), empleado));
 		btnCerrarSesion.addActionListener(e -> cerrarSesion());
+
+		//PERMISOS SEGÚN EL ROL
+		btnEmpleados.setEnabled(empleado.tienePermiso(TipoEmpleado.GERENCIA));
 
 		addWindowListener(new WindowAdapter() {
 			@Override
