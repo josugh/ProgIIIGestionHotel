@@ -1,4 +1,3 @@
-
 package gui;
 
 import java.awt.BorderLayout;
@@ -6,7 +5,6 @@ import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
-import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.JButton;
@@ -24,7 +22,9 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableRowSorter;
 
 import domain.Cliente;
+import domain.EstadoHabitacion;
 import domain.Habitacion;
+import domain.Hotel;
 import domain.Reserva;
 
 public class VentanaReservas extends JFrame {
@@ -75,9 +75,11 @@ public class VentanaReservas extends JFrame {
 
     // CONSTRUCTOR PARA PROBAR LA VENTANA
     public VentanaReservas() {
-        this(new ArrayList<Cliente>(),
-             new ArrayList<Habitacion>(),
-             new ArrayList<Reserva>());
+        this(new Hotel());
+    }
+
+    private VentanaReservas(Hotel hotel) {
+        this(hotel.getClientes(), hotel.getHabitaciones(), hotel.getReservas());
     }
 
     // INICIALIZAR COMPONENTES
@@ -196,10 +198,8 @@ public class VentanaReservas extends JFrame {
     // NOMBRE DE HABITACIÓN
     private String nombreHabitacion(Habitacion habitacion) {
 
-        int posicion = habitaciones.indexOf(habitacion);
-
-        if (posicion >= 0) {
-            return "Habitación " + (posicion + 1);
+        if (habitacion != null && habitaciones.contains(habitacion)) {
+            return "Habitación " + habitacion.getNumero();
         }
 
         return "Habitación no encontrada";
@@ -234,8 +234,9 @@ public class VentanaReservas extends JFrame {
 
         for (int i = 0; i < habitaciones.size(); i++) {
             comboHabitaciones.addItem(
-                "Habitación " + (i + 1)
-            );
+                    "Habitación " + habitaciones.get(i).getNumero()
+                    + " (" + habitaciones.get(i).getTipo() + ")"
+             );
         }
 
         JTextField txtEntrada = new JTextField(10);
@@ -351,6 +352,19 @@ public class VentanaReservas extends JFrame {
                     id, cliente, habitacion,
                     entrada, salida, huespedes
                 );
+                
+                if (habitacion.getEstado() == EstadoHabitacion.MANTENIMIENTO) {
+
+                    JOptionPane.showMessageDialog(
+                        this,
+                        "La habitación " + habitacion.getNumero()
+                        + " está en mantenimiento y no se puede reservar.",
+                        "No disponible",
+                        JOptionPane.WARNING_MESSAGE
+                    );
+
+                    continue;
+                }
 
                 if (!comprobarDisponibilidad(nueva, existente)) {
 
@@ -409,6 +423,10 @@ public class VentanaReservas extends JFrame {
 
         reservas.add(nueva);
         siguienteId++;
+
+        if (nueva.getHabitacion().estaDisponible()) {
+            nueva.getHabitacion().cambiarEstado(EstadoHabitacion.RESERVADA);
+        }
 
         mostrarReservas();
 
@@ -493,6 +511,11 @@ public class VentanaReservas extends JFrame {
         if (opcion == JOptionPane.YES_OPTION) {
 
             reserva.cancelarReserva();
+
+            if (reserva.getHabitacion().getEstado() == EstadoHabitacion.RESERVADA) {
+                reserva.getHabitacion().cambiarEstado(EstadoHabitacion.DISPONIBLE);
+            }
+            
             mostrarReservas();
 
             JOptionPane.showMessageDialog(

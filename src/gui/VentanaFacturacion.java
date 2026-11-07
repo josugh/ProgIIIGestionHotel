@@ -1,13 +1,15 @@
-
 package gui;
 
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
+import java.time.LocalDate;
 import java.util.Locale;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
+
+import domain.Factura;
 
 public class VentanaFacturacion extends JFrame {
 
@@ -233,10 +235,10 @@ public class VentanaFacturacion extends JFrame {
         }
 
         // Calculamos el total
-        double subtotalFactura = importeHabitacion + importeExtras;
+        Factura factura = new Factura(1, null, LocalDate.now(),
+                importeHabitacion, importeExtras, descuento);
 
-        double total = subtotalFactura -
-                (subtotalFactura * descuento / 100);
+        double total = factura.getTotal();
 
         // Mostramos la habitacion y los extras
         modeloResumen.setValueAt(

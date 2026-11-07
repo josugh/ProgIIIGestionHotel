@@ -1,7 +1,6 @@
 package gui;
 
 import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.FlowLayout;
 import java.awt.Font;
 
@@ -10,9 +9,13 @@ import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JTextField;
+
+import domain.Empleado;
+import domain.Hotel;
 
 public class VentanaLogin extends JFrame {
 
@@ -22,8 +25,10 @@ public class VentanaLogin extends JFrame {
 	private JTextField textoUsuario;
 	private JPasswordField textoPassword;
 	private JButton botonIniciarSesion;
+	private Hotel hotel;
 
-	public VentanaLogin() {
+	public VentanaLogin(Hotel hotel) {
+		this.hotel = hotel;
 		setTitle("Gestión Hotel - Login");
 		setSize(420, 300);
 		setLocationRelativeTo(null);
@@ -78,8 +83,28 @@ public class VentanaLogin extends JFrame {
 
 		add(panelLogIn);
 
+		botonIniciarSesion.addActionListener(e -> iniciarSesion());
+		textoPassword.addActionListener(e -> iniciarSesion());
+
 
 		setVisible(true);
+	}
+
+	private void iniciarSesion() {
+		String usuario = textoUsuario.getText().trim();
+		String password = new String(textoPassword.getPassword());
+		if (usuario.isEmpty() || password.isEmpty()) {
+			JOptionPane.showMessageDialog(this, "Introduce el usuario y la contraseña.", "Error", JOptionPane.ERROR_MESSAGE);
+			return;
+		}
+		Empleado empleado = hotel.iniciarSesion(usuario, password);
+		if (empleado == null) {
+			JOptionPane.showMessageDialog(this, "Usuario o contraseña incorrectos.", "Error", JOptionPane.ERROR_MESSAGE);
+			textoPassword.setText("");
+			return;
+		}
+		new VentanaPrincipal(hotel, empleado);
+		dispose();
 	}
 
 }

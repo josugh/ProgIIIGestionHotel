@@ -5,10 +5,13 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
+import java.awt.Window;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -22,16 +25,15 @@ import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import javax.swing.JSpinner;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
-import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingUtilities;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 
 import domain.EstadoHabitacion;
+import domain.Hotel;
 import domain.Habitacion;
 import domain.IncidenciasHabitacion;
 import domain.TipoHabitacion;
@@ -40,9 +42,9 @@ public class PanelHabitaciones extends JFrame {
 
 	private static final long serialVersionUID = 1L;
 
-	private List<Habitacion> habitaciones = new ArrayList<>();
+	private List<Habitacion> habitaciones;
 	private List<Habitacion> visibles = new ArrayList<>();
-	private List<IncidenciasHabitacion> incidencias = new ArrayList<>();
+	private List<IncidenciasHabitacion> incidencias;
 	private int siguienteIdIncidencia = 1;
 
 	private DefaultTableModel modelo;
@@ -52,12 +54,23 @@ public class PanelHabitaciones extends JFrame {
 	private JLabel lblResumen;
 
 	public PanelHabitaciones() {
+		this(new Hotel());
+	}
+
+	private PanelHabitaciones(Hotel hotel) {
+		this(hotel.getHabitaciones(), hotel.getIncidencias());
+	}
+
+	public PanelHabitaciones(List<Habitacion> habitaciones, List<IncidenciasHabitacion> incidencias) {
+		this.habitaciones = habitaciones;
+		this.incidencias = incidencias;
+		for (IncidenciasHabitacion inc : incidencias) {
+			siguienteIdIncidencia = Math.max(siguienteIdIncidencia, inc.getIdIncidencia() + 1);
+		}
 		setTitle("Habitaciones");
 		setSize(900, 520);
 		setLocationRelativeTo(null);
 		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-
-		cargarDatosPrueba();
 
 		JPanel panelArriba = new JPanel(new FlowLayout(FlowLayout.LEFT));
 		txtBuscar = new JTextField(8);
@@ -98,23 +111,19 @@ public class PanelHabitaciones extends JFrame {
 			}
 		});
 
-		JPanel panelBotones = new JPanel(new GridLayout(2, 4, 5, 5));
+		JPanel panelBotones = new JPanel(new GridLayout(2, 3, 5, 5));
 		panelBotones.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
 		JButton btnAnadir = new JButton("Añadir");
 		JButton btnEditar = new JButton("Editar");
 		JButton btnEliminar = new JButton("Eliminar");
 		JButton btnTarifas = new JButton("Tarifas");
-		JButton btnCheckIn = new JButton("Check-in");
-		JButton btnCheckOut = new JButton("Check-out");
 		JButton btnIncidencia = new JButton("Nueva incidencia");
 		JButton btnVerIncidencias = new JButton("Ver incidencias");
 		panelBotones.add(btnAnadir);
 		panelBotones.add(btnEditar);
 		panelBotones.add(btnEliminar);
-		panelBotones.add(btnTarifas);
-		panelBotones.add(btnCheckIn);
-		panelBotones.add(btnCheckOut);
 		panelBotones.add(btnIncidencia);
+		panelBotones.add(btnTarifas);
 		panelBotones.add(btnVerIncidencias);
 
 		lblResumen = new JLabel();
@@ -159,24 +168,17 @@ public class PanelHabitaciones extends JFrame {
 		btnEditar.addActionListener(e -> editar());
 		btnEliminar.addActionListener(e -> eliminar());
 		btnTarifas.addActionListener(e -> cambiarTarifas());
-		btnCheckIn.addActionListener(e -> checkIn());
-		btnCheckOut.addActionListener(e -> checkOut());
 		btnIncidencia.addActionListener(e -> nuevaIncidencia());
 		btnVerIncidencias.addActionListener(e -> verIncidencias());
 
-		cargarTabla();
-	}
+		addWindowListener(new WindowAdapter() {
+			@Override
+			public void windowActivated(WindowEvent e) {
+				cargarTabla();
+			}
+		});
 
-	private void cargarDatosPrueba() {
-		habitaciones.add(new Habitacion(101, 1, TipoHabitacion.INDIVIDUAL, 50, EstadoHabitacion.DISPONIBLE));
-		habitaciones.add(new Habitacion(102, 1, TipoHabitacion.DOBLE, 80, EstadoHabitacion.OCUPADA));
-		habitaciones.add(new Habitacion(103, 1, TipoHabitacion.DOBLE, 80, EstadoHabitacion.RESERVADA));
-		habitaciones.add(new Habitacion(201, 2, TipoHabitacion.INDIVIDUAL, 55, EstadoHabitacion.DISPONIBLE));
-		habitaciones.add(new Habitacion(202, 2, TipoHabitacion.DOBLE, 85, EstadoHabitacion.MANTENIMIENTO));
-		habitaciones.add(new Habitacion(301, 3, TipoHabitacion.SUITE, 150, EstadoHabitacion.OCUPADA));
-		Habitacion h202 = buscarPorNumero(202);
-		incidencias.add(new IncidenciasHabitacion(siguienteIdIncidencia++, h202, "No funciona el aire acondicionado", LocalDate.now().minusDays(3), false));
-		incidencias.add(new IncidenciasHabitacion(siguienteIdIncidencia++, h202, "Bombilla fundida en el baño", LocalDate.now().minusDays(40), true));
+		cargarTabla();
 	}
 
 	private Color colorEstado(EstadoHabitacion estado) {
@@ -354,47 +356,7 @@ public class PanelHabitaciones extends JFrame {
 		JOptionPane.showMessageDialog(this, "Se ha cambiado el precio de " + cambiadas + " habitaciones " + tipo);
 	}
 
-	private void checkIn() {
-		Habitacion h = seleccionada();
-		if (h == null) {
-			return;
-		}
-		if (h.getEstado() != EstadoHabitacion.DISPONIBLE && h.getEstado() != EstadoHabitacion.RESERVADA) {
-			JOptionPane.showMessageDialog(this, "La habitación " + h.getNumero() + " está " + h.getEstado(), "Error", JOptionPane.ERROR_MESSAGE);
-			return;
-		}
-		String cliente = JOptionPane.showInputDialog(this, "Nombre del cliente:", "Check-in habitación " + h.getNumero(), JOptionPane.QUESTION_MESSAGE);
-		if (cliente == null || cliente.trim().isEmpty()) {
-			return;
-		}
-		h.cambiarEstado(EstadoHabitacion.OCUPADA);
-		cargarTabla();
-		JOptionPane.showMessageDialog(this, "Check-in de " + cliente.trim() + " en la habitación " + h.getNumero());
-	}
-
-	private void checkOut() {
-		Habitacion h = seleccionada();
-		if (h == null) {
-			return;
-		}
-		if (h.getEstado() != EstadoHabitacion.OCUPADA) {
-			JOptionPane.showMessageDialog(this, "La habitación " + h.getNumero() + " no está ocupada", "Error", JOptionPane.ERROR_MESSAGE);
-			return;
-		}
-		JSpinner spNoches = new JSpinner(new SpinnerNumberModel(1, 1, 365, 1));
-		int opcion = JOptionPane.showConfirmDialog(this, new Object[] { "Número de noches:", spNoches }, "Check-out habitación " + h.getNumero(), JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
-		if (opcion != JOptionPane.OK_OPTION) {
-			return;
-		}
-		int noches = (Integer) spNoches.getValue();
-		double importe = noches * h.getPrecioNoche();
-		h.cambiarEstado(EstadoHabitacion.LIMPIEZA);
-		cargarTabla();
-		JOptionPane.showMessageDialog(this, "Noches: " + noches + " x " + h.getPrecioNoche() + " € = " + importe + " €\n\nLa habitación estará disponible cuando termine la limpieza.", "Check-out habitación " + h.getNumero(), JOptionPane.INFORMATION_MESSAGE);
-		iniciarLimpieza(h);
-	}
-
-	private void iniciarLimpieza(Habitacion h) {
+	public static void iniciarLimpieza(Habitacion h) {
 		Thread hilo = new Thread(() -> {
 			try {
 				Thread.sleep(10000);
@@ -404,7 +366,11 @@ public class PanelHabitaciones extends JFrame {
 			SwingUtilities.invokeLater(() -> {
 				if (h.getEstado() == EstadoHabitacion.LIMPIEZA) {
 					h.cambiarEstado(EstadoHabitacion.DISPONIBLE);
-					cargarTabla();
+				}
+				for (Window w : Window.getWindows()) {
+					if (w instanceof PanelHabitaciones && w.isShowing()) {
+						((PanelHabitaciones) w).cargarTabla();
+					}
 				}
 			});
 		});

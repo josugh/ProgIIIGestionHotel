@@ -1,26 +1,23 @@
-
 package domain;
 
 public class ServicioHabitacion {
 
-	private Habitacion habitacion;
+	private int idServicio;
 	private String nombre;
 	private double precio;
-	private int cantidad;
 
-	public ServicioHabitacion(Habitacion habitacion, String nombre, double precio, int cantidad) {
-		this.habitacion = habitacion;
+	public ServicioHabitacion(int idServicio, String nombre, double precio) {
+		this.idServicio = idServicio;
 		this.nombre = nombre;
 		this.precio = precio;
-		this.cantidad = cantidad;
 	}
 
-	public Habitacion getHabitacion() {
-		return habitacion;
+	public int getIdServicio() {
+		return idServicio;
 	}
 
-	public void setHabitacion(Habitacion habitacion) {
-		this.habitacion = habitacion;
+	public void setIdServicio(int idServicio) {
+		this.idServicio = idServicio;
 	}
 
 	public String getNombre() {
@@ -39,20 +36,8 @@ public class ServicioHabitacion {
 		this.precio = precio;
 	}
 
-	public int getCantidad() {
-		return cantidad;
-	}
-
-	public void setCantidad(int cantidad) {
-		this.cantidad = cantidad;
-	}
-
-	public double getImporte() {
-		return precio * cantidad;
-	}
-
 	@Override
 	public String toString() {
-		return cantidad + " x " + nombre + " = " + getImporte() + " €";
+		return nombre + " (" + precio + " €)";
 	}
 }
